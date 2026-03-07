@@ -1,0 +1,45 @@
+/// All 32 NHL teams. The canonical index is used throughout the app to
+/// identify teams without copying strings.
+pub const NHL_TEAMS: &[&str] = &[
+    "Anaheim Ducks",
+    "San Jose Sharks",
+    "Chicago Blackhawks",
+    "Nashville Predators",
+    "Philadelphia Flyers",
+    "Buffalo Sabres",
+    "New Jersey Devils",
+    "Ottawa Senators",
+    "Montreal Canadiens",
+    "St. Louis Blues",
+    "Arizona Coyotes",
+    "Columbus Blue Jackets",
+    "Pittsburgh Penguins",
+    "Vancouver Canucks",
+    "Detroit Red Wings",
+    "Seattle Kraken",
+    "Calgary Flames",
+    "Washington Capitals",
+    "Minnesota Wild",
+    "New York Islanders",
+    "Tampa Bay Lightning",
+    "Winnipeg Jets",
+    "Toronto Maple Leafs",
+    "Los Angeles Kings",
+    "Colorado Avalanche",
+    "Carolina Hurricanes",
+    "Vegas Golden Knights",
+    "Dallas Stars",
+    "Edmonton Oilers",
+    "New York Rangers",
+    "Florida Panthers",
+    "Boston Bruins",
+];
+
+/// 3-letter abbreviations, parallel to `NHL_TEAMS`.
+pub const NHL_ABBREVS: &[&str] = &[
+    "ANA", "SJS", "CHI", "NSH", "PHI", "BUF", "NJD", "OTT",
+    "MTL", "STL", "ARI", "CBJ", "PIT", "VAN", "DET", "SEA",
+    "CGY", "WSH", "MIN", "NYI", "TBL", "WPG", "TOR", "LAK",
+    "COL", "CAR", "VGK", "DAL", "EDM", "NYR", "FLA", "BOS",
+];
+
