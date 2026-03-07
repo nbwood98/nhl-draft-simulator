@@ -1,5 +1,3 @@
-/// All 32 NHL teams. The canonical index is used throughout the app to
-/// identify teams without copying strings.
 pub const NHL_TEAMS: &[&str] = &[
     "Anaheim Ducks",
     "San Jose Sharks",
@@ -35,7 +33,6 @@ pub const NHL_TEAMS: &[&str] = &[
     "Boston Bruins",
 ];
 
-/// 3-letter abbreviations, parallel to `NHL_TEAMS`.
 pub const NHL_ABBREVS: &[&str] = &[
     "ANA", "SJS", "CHI", "NSH", "PHI", "BUF", "NJD", "OTT",
     "MTL", "STL", "ARI", "CBJ", "PIT", "VAN", "DET", "SEA",

@@ -1,19 +1,10 @@
 use crate::data::teams::NHL_TEAMS;
 
-/// State for the Team Selection screen.
-///
-/// Teams are ordered by final standing: index 0 = position 1 (best/champion),
-/// index 31 = position 32 (worst/last place).
-/// Draft lottery odds are derived later by reversing this order.
 #[derive(Debug, Clone)]
 pub struct TeamSelectionState {
-    /// Ordered list of team indices into `NHL_TEAMS`.
     pub teams: Vec<usize>,
-    /// Cursor row (0-based).
     pub cursor: usize,
-    /// `Some` when the user has grabbed a team for dragging.
     pub grabbed: Option<usize>,
-    /// Scroll offset — kept in sync with the visible viewport.
     pub offset: usize,
 }
 
@@ -66,8 +57,7 @@ impl TeamSelectionState {
     pub fn is_grabbed(&self) -> bool {
         self.grabbed.is_some()
     }
-
-    /// Called by the widget once it knows the real viewport height.
+    
     pub fn sync_offset(&mut self, visible_rows: usize) {
         self.clamp_offset(visible_rows);
     }

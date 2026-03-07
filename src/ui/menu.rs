@@ -8,7 +8,6 @@ use ratatui::{
 
 use crate::app::MenuItem;
 
-/// Renders the navigation menu panel.
 pub struct Menu<'a> {
     pub items: &'a [MenuItem],
     pub selected: usize,

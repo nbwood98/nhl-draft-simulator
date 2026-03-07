@@ -8,13 +8,11 @@ use ratatui::{
 
 use crate::ui::carousel::Carousel;
 
-/// Renders the NHL Draft header panel.
 pub struct Header<'a> {
     pub carousel_offset: f64,
     pub team_order: &'a [usize],
 }
 
-/// Single unified block-character art for "NHL DRAFT".
 const ART: &[&str] = &[
     "███╗   ██╗██╗  ██╗██╗      ██████╗ ██████╗  █████╗ ███████╗████████╗",
     "████╗  ██║██║  ██║██║      ██╔══██╗██╔══██╗██╔══██╗██╔════╝╚══██╔══╝",
@@ -24,7 +22,6 @@ const ART: &[&str] = &[
     "╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ",
 ];
 
-/// Gradient colour stops (R, G, B): cyan → royal blue → magenta → gold.
 const GRADIENT: &[(u8, u8, u8)] = &[
     (0, 230, 255),
     (0, 120, 255),
@@ -62,8 +59,7 @@ impl<'a> Widget for Header<'a> {
 
         let inner = outer_block.inner(area);
         outer_block.render(area, buf);
-
-        // Split inner into: banner (art rows + padding) and carousel.
+        
         let banner_height = ART.len() as u16 + 2; // art + 1 blank above + 1 below
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -72,8 +68,7 @@ impl<'a> Widget for Header<'a> {
                 Constraint::Min(0),
             ])
             .split(inner);
-
-        // --- Banner ---
+        
         let max_chars = ART.iter().map(|r| r.chars().count()).max().unwrap_or(1);
         let mut lines: Vec<Line> = vec![Line::raw("")];
         for row in ART {
@@ -91,8 +86,7 @@ impl<'a> Widget for Header<'a> {
             lines.push(Line::from(spans).centered());
         }
         Paragraph::new(lines).render(chunks[0], buf);
-
-        // --- Carousel ---
+        
         Carousel {
             offset: self.carousel_offset,
             teams: self.team_order,

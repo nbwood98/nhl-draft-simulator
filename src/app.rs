@@ -1,55 +1,13 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::DefaultTerminal;
 use std::io;
-
+use std::time::Duration;
 use crate::screens::{
     main_menu::MainMenuState,
     team_selection::TeamSelectionState,
 };
 
-// ---------------------------------------------------------------------------
-// Screen routing
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Screen {
-    MainMenu,
-    TeamSelection,
-}
-
-// ---------------------------------------------------------------------------
-// Menu items
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MenuItem {
-    TeamSelection,
-    Item2,
-    Item3,
-    Quit,
-}
-
-impl MenuItem {
-    pub const ALL: &'static [MenuItem] = &[
-        MenuItem::TeamSelection,
-        MenuItem::Item2,
-        MenuItem::Item3,
-        MenuItem::Quit,
-    ];
-
-    pub fn label(self) -> &'static str {
-        match self {
-            MenuItem::TeamSelection => "Team Selection",
-            MenuItem::Item2 => "Item 2",
-            MenuItem::Item3 => "Item 3",
-            MenuItem::Quit => "Quit",
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// App — owns screen state, handles routing
-// ---------------------------------------------------------------------------
+pub const TICK_MS: u64 = 60;
 
 #[derive(Debug)]
 pub struct App {
@@ -72,7 +30,7 @@ impl Default for App {
 
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        let tick = MainMenuState::tick_duration();
+        let tick = Duration::from_millis(TICK_MS);
         loop {
             terminal.draw(|frame| crate::ui::draw(frame, self))?;
 
@@ -137,6 +95,38 @@ impl App {
                 }
             }
             _ => {}
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Screen {
+    MainMenu,
+    TeamSelection,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MenuItem {
+    TeamSelection,
+    Item2,
+    Item3,
+    Quit,
+}
+
+impl MenuItem {
+    pub const ALL: &'static [MenuItem] = &[
+        MenuItem::TeamSelection,
+        MenuItem::Item2,
+        MenuItem::Item3,
+        MenuItem::Quit,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            MenuItem::TeamSelection => "Team Selection",
+            MenuItem::Item2 => "Item 2",
+            MenuItem::Item3 => "Item 3",
+            MenuItem::Quit => "Quit",
         }
     }
 }
