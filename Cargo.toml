@@ -1,0 +1,15 @@
+[package]
+name = "nhl-draft-simulator"
+version = "0.1.0"
+description = "TUI NHL Draft Lottery Simulator"
+edition = "2024"
+
+[dependencies]
+ratatui = "0.30.0"
+crossterm = "0.29.0"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
