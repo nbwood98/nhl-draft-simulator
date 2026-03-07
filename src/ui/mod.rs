@@ -13,7 +13,6 @@ use header::Header;
 use menu::Menu;
 use team_selection::TeamSelectionWidget;
 
-/// Top-level draw function — routes to the active screen.
 pub fn draw(frame: &mut Frame, app: &mut App) {
     match app.screen {
         Screen::MainMenu => draw_main_menu(frame, app),

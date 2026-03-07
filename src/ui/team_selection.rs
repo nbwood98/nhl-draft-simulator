@@ -42,8 +42,7 @@ impl<'a> TeamSelectionWidget<'a> {
 
         let inner = block.inner(area);
         block.render(area, buf);
-
-        // Table header row height (1) + column header row (1) = 2 reserved rows.
+        
         let visible_rows = inner.height.saturating_sub(1) as usize;
         self.state.sync_offset(visible_rows);
 
@@ -64,7 +63,6 @@ impl<'a> TeamSelectionWidget<'a> {
                 let is_cursor = list_idx == cursor;
 
                 let (rank_style, name_style, prefix) = if is_cursor && is_grabbed {
-                    // Item being dragged — vivid yellow highlight
                     (
                         Style::default()
                             .fg(Color::Black)
@@ -77,7 +75,6 @@ impl<'a> TeamSelectionWidget<'a> {
                         "  ↕  ",
                     )
                 } else if is_cursor {
-                    // Normal cursor highlight
                     (
                         Style::default()
                             .fg(Color::Black)
@@ -128,7 +125,6 @@ impl<'a> TeamSelectionWidget<'a> {
     }
 }
 
-/// Colour-code finish position: 1 = champion (gold), 32 = last place (red = most lottery odds).
 fn rank_color(rank: usize) -> Color {
     match rank {
         1..=5 => Color::Yellow,
@@ -136,7 +132,7 @@ fn rank_color(rank: usize) -> Color {
         12..=18 => Color::Cyan,
         19..=25 => Color::Blue,
         26..=31 => Color::Magenta,
-        _ => Color::Red, // 32 = dead last
+        _ => Color::Red,
     }
 }
 

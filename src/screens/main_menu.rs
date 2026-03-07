@@ -1,10 +1,5 @@
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 
-/// How fast the carousel animates — ms per tick.
-pub const TICK_MS: u64 = 60;
-
-/// All state owned by the main menu screen, including the carousel animation.
-/// The UI layer reads from this; `App` never needs to know the details.
 #[derive(Debug)]
 pub struct MainMenuState {
     pub selected: usize,
@@ -33,22 +28,15 @@ impl MainMenuState {
             self.selected += 1;
         }
     }
-
-    /// Advance the carousel animation by one frame if enough time has elapsed.
+    
     pub fn tick(&mut self) {
         self.carousel.tick();
     }
-
-    pub fn tick_duration() -> Duration {
-        Duration::from_millis(TICK_MS)
-    }
+    
 }
 
-/// Encapsulates the scrolling offset for the team card carousel.
-/// Completely invisible to `App`.
 #[derive(Debug)]
 pub struct CarouselState {
-    /// Continuous horizontal scroll position in terminal columns.
     pub offset: f64,
     last_tick: Instant,
 }
