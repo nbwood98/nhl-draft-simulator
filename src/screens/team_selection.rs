@@ -1,4 +1,7 @@
 use crate::data::teams::NHL_TEAMS;
+use crossterm::event::{KeyCode, KeyEvent};
+use crate::app::Screen;
+use crate::screens::screen::{ScreenAction, ScreenHandler};
 
 #[derive(Debug, Clone)]
 pub struct TeamSelectionState {
@@ -74,3 +77,30 @@ impl TeamSelectionState {
     }
 }
 
+impl ScreenHandler for TeamSelectionState {
+    fn handle_key_event(&mut self, key_event: KeyEvent) -> ScreenAction {
+        match key_event.code {
+            KeyCode::Up | KeyCode::Char('k') => {
+                self.move_up();
+                ScreenAction::None
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                self.move_down();
+                ScreenAction::None
+            }
+            KeyCode::Char(' ') | KeyCode::Enter => {
+                self.toggle_grab();
+                ScreenAction::None
+            }
+            KeyCode::Esc | KeyCode::Char('q') => {
+                if self.is_grabbed() {
+                    self.release();
+                    ScreenAction::None
+                } else {
+                    ScreenAction::GoTo(Screen::MainMenu)
+                }
+            }
+            _ => ScreenAction::None,
+        }
+    }
+}

@@ -1,4 +1,7 @@
 use std::time::{Instant};
+use crossterm::event::{KeyCode, KeyEvent};
+use crate::app::{MenuItem, Screen};
+use crate::screens::screen::{ScreenAction, ScreenHandler};
 
 #[derive(Debug)]
 pub struct MainMenuState {
@@ -57,3 +60,24 @@ impl CarouselState {
     }
 }
 
+impl ScreenHandler for MainMenuState {
+    fn handle_key_event(&mut self, key_event: KeyEvent) -> ScreenAction {
+        match key_event.code {
+            KeyCode::Up | KeyCode::Char('k') => {
+                self.move_up(MenuItem::ALL.len());
+                ScreenAction::None
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                self.move_down(MenuItem::ALL.len());
+                ScreenAction::None
+            }
+            KeyCode::Enter => match MenuItem::ALL[self.selected] {
+                MenuItem::TeamSelection => ScreenAction::GoTo(Screen::TeamSelection),
+                MenuItem::Quit => ScreenAction::Quit,
+                _ => ScreenAction::None,
+            },
+            KeyCode::Char('q') | KeyCode::Esc => ScreenAction::Quit,
+            _ => ScreenAction::None,
+        }
+    }
+}
