@@ -1,4 +1,3 @@
-use crate::data::teams::NHL_TEAMS;
 use crossterm::event::{KeyCode, KeyEvent};
 use crate::app::Screen;
 use crate::screens::screen::{ScreenAction, ScreenHandler};
@@ -11,14 +10,20 @@ pub struct TeamSelectionState {
     pub offset: usize,
 }
 
-impl Default for TeamSelectionState {
-    fn default() -> Self {
+impl TeamSelectionState {
+    pub fn new(team_count: usize) -> Self {
         Self {
-            teams: (0..NHL_TEAMS.len()).collect(),
+            teams: (0..team_count).collect(),
             cursor: 0,
             grabbed: None,
             offset: 0,
         }
+    }
+}
+
+impl Default for TeamSelectionState {
+    fn default() -> Self {
+        Self::new(32)
     }
 }
 

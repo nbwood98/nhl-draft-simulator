@@ -2,6 +2,7 @@ use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::DefaultTerminal;
 use std::io;
 use std::time::Duration;
+use crate::data::NhlData;
 use crate::screens::{
     main_menu::MainMenuState,
     team_selection::TeamSelectionState,
@@ -16,16 +17,26 @@ pub struct App {
     pub exit: bool,
     pub main_menu: MainMenuState,
     pub team_selection: TeamSelectionState,
+    pub nhl_data: NhlData,
 }
 
-impl Default for App {
-    fn default() -> Self {
+impl App {
+    pub fn new(nhl_data: NhlData) -> Self {
+        let team_count = nhl_data.len();
         Self {
             screen: Screen::MainMenu,
             exit: false,
             main_menu: MainMenuState::default(),
-            team_selection: TeamSelectionState::default(),
+            team_selection: TeamSelectionState::new(team_count),
+            nhl_data,
         }
+    }
+}
+
+impl Default for App {
+    fn default() -> Self {
+        let nhl_data = NhlData::default();
+        Self::new(nhl_data)
     }
 }
 

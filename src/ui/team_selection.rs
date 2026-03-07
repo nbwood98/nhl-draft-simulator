@@ -6,11 +6,12 @@ use ratatui::{
     widgets::{Block, Cell, Row, Table, Widget},
 };
 
-use crate::data::teams::NHL_TEAMS;
+use crate::data::NhlData;
 use crate::screens::team_selection::TeamSelectionState;
 
 pub struct TeamSelectionWidget<'a> {
     pub state: &'a mut TeamSelectionState,
+    pub nhl_data: &'a NhlData,
 }
 
 impl<'a> Widget for TeamSelectionWidget<'a> {
@@ -49,6 +50,7 @@ impl<'a> TeamSelectionWidget<'a> {
         let is_grabbed = self.state.grabbed.is_some();
         let cursor = self.state.cursor;
         let offset = self.state.offset;
+        let nhl_data = self.nhl_data;
 
         let rows: Vec<Row> = self
             .state
@@ -59,7 +61,7 @@ impl<'a> TeamSelectionWidget<'a> {
             .take(visible_rows)
             .map(|(list_idx, &team_idx)| {
                 let rank = list_idx + 1;
-                let name = NHL_TEAMS[team_idx];
+                let name = nhl_data.team_name(team_idx);
                 let is_cursor = list_idx == cursor;
 
                 let (rank_style, name_style, prefix) = if is_cursor && is_grabbed {
@@ -97,7 +99,7 @@ impl<'a> TeamSelectionWidget<'a> {
 
                 Row::new(vec![
                     Cell::from(format!("{prefix}{rank:>2}")).style(rank_style),
-                    Cell::from(name).style(name_style),
+                    Cell::from(name.to_string()).style(name_style),
                 ])
             })
             .collect();

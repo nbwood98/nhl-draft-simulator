@@ -5,7 +5,7 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::data::teams::{NHL_ABBREVS, NHL_TEAMS};
+use crate::data::NhlData;
 
 fn placeholder_card(team_idx: usize) -> [&'static str; 5] {
     // We cycle through a set of frame shapes and embed the abbreviation.
@@ -42,6 +42,7 @@ pub const CARD_HEIGHT: usize = 8;
 pub struct Carousel<'a> {
     pub offset: f64,
     pub teams: &'a [usize],
+    pub nhl_data: &'a NhlData,
 }
 
 impl<'a> Widget for Carousel<'a> {
@@ -50,7 +51,7 @@ impl<'a> Widget for Carousel<'a> {
             return;
         }
 
-        let n = NHL_TEAMS.len();
+        let n = self.nhl_data.len();
         let belt = n * CARD_WIDTH;
         let px_offset = (self.offset as usize) % belt;
         let card_top = area.y + area.height.saturating_sub(CARD_HEIGHT as u16) / 2;
@@ -62,14 +63,22 @@ impl<'a> Widget for Carousel<'a> {
 
         while x < (area.x as isize + area_w as isize) {
             let team_idx = self.teams[card_num % n];
-            let abbrev = NHL_ABBREVS[team_idx];
-            let name = NHL_TEAMS[team_idx];
-            let art = placeholder_card(team_idx);
+            let abbrev = self.nhl_data.team_abbrev(team_idx);
+            let name = self.nhl_data.team_name(team_idx);
+            let logo_art = self.nhl_data.team_logo_art(team_idx);
             let color = team_color(team_idx);
             
             let card_x_start = x.max(area.x as isize) as u16;
             let card_x_end = (x + CARD_WIDTH as isize).min(area.x as isize + area_w as isize) as u16;
             
+            // Render logo art (braille) or placeholder
+            let art: Vec<String> = if logo_art.is_empty() {
+                let ph = placeholder_card(team_idx);
+                ph.iter().map(|s| s.to_string()).collect()
+            } else {
+                logo_art.to_vec()
+            };
+
             for (row_i, art_line) in art.iter().enumerate() {
                 let y = card_top + row_i as u16;
                 if y >= area.y + area.height {
@@ -78,7 +87,7 @@ impl<'a> Widget for Carousel<'a> {
                 render_card_row(buf, art_line, x, card_x_start, card_x_end, y, color);
             }
             
-            let abbrev_y = card_top + 5;
+            let abbrev_y = card_top + art.len() as u16;
             if abbrev_y < area.y + area.height {
                 render_text_row(
                     buf,
@@ -92,7 +101,7 @@ impl<'a> Widget for Carousel<'a> {
             }
             
             let short_name: String = name.chars().take(9).collect();
-            let name_y = card_top + 6;
+            let name_y = card_top + art.len() as u16 + 1;
             if name_y < area.y + area.height {
                 render_text_row(
                     buf,

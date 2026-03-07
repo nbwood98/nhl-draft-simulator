@@ -6,11 +6,13 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
+use crate::data::NhlData;
 use crate::ui::carousel::Carousel;
 
 pub struct Header<'a> {
     pub carousel_offset: f64,
     pub team_order: &'a [usize],
+    pub nhl_data: &'a NhlData,
 }
 
 const ART: &[&str] = &[
@@ -90,6 +92,7 @@ impl<'a> Widget for Header<'a> {
         Carousel {
             offset: self.carousel_offset,
             teams: self.team_order,
+            nhl_data: self.nhl_data,
         }
         .render(chunks[1], buf);
     }
