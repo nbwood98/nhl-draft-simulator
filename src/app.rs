@@ -2,114 +2,91 @@ use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::DefaultTerminal;
 use std::io;
 use std::time::Duration;
+
 use crate::data::NhlData;
-use crate::screens::{
-    main_menu::MainMenuState,
-    team_selection::TeamSelectionState,
-    ScreenAction, ScreenHandler,
-};
+use crate::screen::main_menu::MainMenuState;
+use crate::screen::simulate_lottery::SimulateLotteryState;
+use crate::screen::team_selection::TeamSelectionState;
+use crate::screen::{ScreenAction, ScreenId};
 
-pub const TICK_MS: u64 = 60;
+const TICK_MS: u64 = 60;
 
-#[derive(Debug)]
 pub struct App {
-    pub screen: Screen,
-    pub exit: bool,
-    pub main_menu: MainMenuState,
-    pub team_selection: TeamSelectionState,
-    pub nhl_data: NhlData,
+    active_screen: ScreenId,
+    exit: bool,
+    nhl_data: NhlData,
+    main_menu: MainMenuState,
+    team_selection: TeamSelectionState,
+    simulate_lottery: SimulateLotteryState,
 }
 
 impl App {
     pub fn new(nhl_data: NhlData) -> Self {
         let team_count = nhl_data.len();
         Self {
-            screen: Screen::MainMenu,
+            active_screen: ScreenId::MainMenu,
             exit: false,
             main_menu: MainMenuState::default(),
             team_selection: TeamSelectionState::new(team_count),
+            simulate_lottery: SimulateLotteryState::default(),
             nhl_data,
         }
     }
-}
 
-impl Default for App {
-    fn default() -> Self {
-        let nhl_data = NhlData::default();
-        Self::new(nhl_data)
-    }
-}
-
-impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         let tick = Duration::from_millis(TICK_MS);
         loop {
-            terminal.draw(|frame| crate::ui::draw(frame, self))?;
+            self.tick();
+            terminal.draw(|frame| self.draw(frame))?;
 
-            if event::poll(tick)? {
-                if let Event::Key(key_event) = event::read()? {
-                    if key_event.kind == KeyEventKind::Press {
-                        self.handle_key_event(key_event);
-                    }
-                }
+            if event::poll(tick)?
+                && let Event::Key(key) = event::read()?
+                && key.kind == KeyEventKind::Press
+            {
+                self.handle_key_event(key);
             }
 
             if self.exit {
                 break;
             }
-
-            if self.screen == Screen::MainMenu {
-                self.main_menu.tick();
-            }
         }
         Ok(())
     }
 
-    fn active_handler(&mut self) -> &mut dyn ScreenHandler {
-        match self.screen {
-            Screen::MainMenu => &mut self.main_menu,
-            Screen::TeamSelection => &mut self.team_selection,
+    fn tick(&mut self) {
+        if self.active_screen == ScreenId::MainMenu {
+            self.main_menu.tick();
         }
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
-        let action = self.active_handler().handle_key_event(key_event);
+    fn handle_key_event(&mut self, key: KeyEvent) {
+        let action = match self.active_screen {
+            ScreenId::MainMenu => self.main_menu.handle_key_event(key),
+            ScreenId::TeamSelection => self.team_selection.handle_key_event(key),
+            ScreenId::SimulateLottery => self
+                .simulate_lottery
+                .handle_key_event(key, &self.team_selection.team_order),
+        };
         match action {
-            ScreenAction::GoTo(screen) => self.screen = screen,
+            ScreenAction::GoTo(id) => self.active_screen = id,
             ScreenAction::Quit => self.exit = true,
             ScreenAction::None => {}
         }
     }
-}
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Screen {
-    MainMenu,
-    TeamSelection,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MenuItem {
-    TeamSelection,
-    Item2,
-    Item3,
-    Quit,
-}
-
-impl MenuItem {
-    pub const ALL: &'static [MenuItem] = &[
-        MenuItem::TeamSelection,
-        MenuItem::Item2,
-        MenuItem::Item3,
-        MenuItem::Quit,
-    ];
-
-    pub fn label(self) -> &'static str {
-        match self {
-            MenuItem::TeamSelection => "Team Selection",
-            MenuItem::Item2 => "Item 2",
-            MenuItem::Item3 => "Item 3",
-            MenuItem::Quit => "Quit",
+    fn draw(&mut self, frame: &mut ratatui::Frame) {
+        match self.active_screen {
+            ScreenId::MainMenu => {
+                self.main_menu
+                    .draw(frame, &self.nhl_data, &self.team_selection.team_order);
+            }
+            ScreenId::TeamSelection => {
+                self.team_selection.draw(frame, &self.nhl_data);
+            }
+            ScreenId::SimulateLottery => {
+                self.simulate_lottery
+                    .draw(frame, &self.nhl_data, &self.team_selection.team_order);
+            }
         }
     }
 }

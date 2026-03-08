@@ -108,7 +108,7 @@ fn svg_to_braille(svg_data: &[u8]) -> Result<Vec<String>, Box<dyn std::error::Er
     Ok(rows)
 }
 
-fn placeholder_art() -> Vec<String> {
+pub fn placeholder_art() -> Vec<String> {
     vec![
         "⣀⣤⣤⣤⣤⣤⣀  ".into(),
         "⣿⣿⣿⣿⣿⣿⣿ ".into(),

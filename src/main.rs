@@ -1,13 +1,11 @@
 mod app;
 mod data;
-mod screens;
-mod ui;
+mod screen;
+mod widget;
 
 use std::io;
 
 fn main() -> io::Result<()> {
-    // Fetch live NHL standings + logos before entering TUI.
-    // Falls back to hardcoded data on failure.
     let nhl_data = match data::nhl_api::fetch_standings() {
         Ok(teams) => {
             eprintln!("✓ Fetched {} teams from NHL API", teams.len());

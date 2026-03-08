@@ -13,9 +13,12 @@ pub struct NhlData {
 }
 
 impl NhlData {
-    /// Number of teams.
     pub fn len(&self) -> usize {
         self.teams.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.teams.is_empty()
     }
 
     pub fn team_name(&self, idx: usize) -> &str {
@@ -45,7 +48,7 @@ impl Default for NhlData {
                 league_rank: (teams::NHL_TEAMS.len() - i) as u32,
             })
             .collect();
-        let logos = vec![vec![]; teams.len()];
+        let logos = vec![logos::placeholder_art(); teams.len()];
         Self { teams, logos }
     }
 }
