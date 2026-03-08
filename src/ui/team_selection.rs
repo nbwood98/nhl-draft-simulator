@@ -33,7 +33,7 @@ impl<'a> TeamSelectionWidget<'a> {
             .border_style(Style::default().fg(Color::Cyan))
             .title(
                 Line::from(Span::styled(
-                    " Final Standings  (1 = Best  ·  32 = Worst) ",
+                    " Draft Order (Reverse Standings) ",
                     Style::default()
                         .fg(Color::White)
                         .add_modifier(Modifier::BOLD),
@@ -89,10 +89,9 @@ impl<'a> TeamSelectionWidget<'a> {
                         "  ▶  ",
                     )
                 } else {
-                    let fg = rank_color(rank);
                     (
-                        Style::default().fg(fg),
-                        Style::default().fg(Color::White),
+                        Style::default().fg(rank_color(rank)),
+                        Style::default().fg(rank_name_color(rank)),
                         "     ",
                     )
                 };
@@ -129,12 +128,17 @@ impl<'a> TeamSelectionWidget<'a> {
 
 fn rank_color(rank: usize) -> Color {
     match rank {
-        1..=5 => Color::Yellow,
-        6..=11 => Color::Green,
-        12..=18 => Color::Cyan,
-        19..=25 => Color::Blue,
-        26..=31 => Color::Magenta,
+        1..=3 => Color::Magenta,
+        4..=10 => Color::Blue,
+        11..=16 => Color::Cyan,
         _ => Color::Red,
+    }
+}
+
+fn rank_name_color(rank: usize) -> Color {
+    match rank {
+        1..=16 => Color::White,
+        _ => Color::Gray,
     }
 }
 
