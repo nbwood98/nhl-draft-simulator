@@ -63,10 +63,6 @@ impl NhlData {
         self.teams.len()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.teams.is_empty()
-    }
-
     pub fn draft_order(&self) -> &[usize] {
         &self.draft_order
     }
