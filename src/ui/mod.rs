@@ -33,6 +33,7 @@ fn draw_main_menu(frame: &mut Frame, app: &mut App) {
         Header {
             carousel_offset: app.main_menu.carousel.offset,
             team_order: &app.team_selection.teams,
+            nhl_data: &app.nhl_data,
         },
         chunks[0],
     );
@@ -49,6 +50,7 @@ fn draw_team_selection(frame: &mut Frame, app: &mut App) {
     frame.render_widget(
         TeamSelectionWidget {
             state: &mut app.team_selection,
+            nhl_data: &app.nhl_data,
         },
         frame.area(),
     );

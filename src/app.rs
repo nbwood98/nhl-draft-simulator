@@ -1,10 +1,12 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::DefaultTerminal;
 use std::io;
 use std::time::Duration;
+use crate::data::NhlData;
 use crate::screens::{
     main_menu::MainMenuState,
     team_selection::TeamSelectionState,
+    ScreenAction, ScreenHandler,
 };
 
 pub const TICK_MS: u64 = 60;
@@ -15,16 +17,26 @@ pub struct App {
     pub exit: bool,
     pub main_menu: MainMenuState,
     pub team_selection: TeamSelectionState,
+    pub nhl_data: NhlData,
 }
 
-impl Default for App {
-    fn default() -> Self {
+impl App {
+    pub fn new(nhl_data: NhlData) -> Self {
+        let team_count = nhl_data.len();
         Self {
             screen: Screen::MainMenu,
             exit: false,
             main_menu: MainMenuState::default(),
-            team_selection: TeamSelectionState::default(),
+            team_selection: TeamSelectionState::new(team_count),
+            nhl_data,
         }
+    }
+}
+
+impl Default for App {
+    fn default() -> Self {
+        let nhl_data = NhlData::default();
+        Self::new(nhl_data)
     }
 }
 
@@ -53,48 +65,19 @@ impl App {
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
+    fn active_handler(&mut self) -> &mut dyn ScreenHandler {
         match self.screen {
-            Screen::MainMenu => self.handle_main_menu_key(key_event),
-            Screen::TeamSelection => self.handle_team_selection_key(key_event),
+            Screen::MainMenu => &mut self.main_menu,
+            Screen::TeamSelection => &mut self.team_selection,
         }
     }
 
-    fn handle_main_menu_key(&mut self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Up | KeyCode::Char('k') => {
-                self.main_menu.move_up(MenuItem::ALL.len());
-            }
-            KeyCode::Down | KeyCode::Char('j') => {
-                self.main_menu.move_down(MenuItem::ALL.len());
-            }
-            KeyCode::Enter => self.main_menu_select(),
-            KeyCode::Char('q') | KeyCode::Esc => self.exit = true,
-            _ => {}
-        }
-    }
-
-    fn main_menu_select(&mut self) {
-        match MenuItem::ALL[self.main_menu.selected] {
-            MenuItem::TeamSelection => self.screen = Screen::TeamSelection,
-            MenuItem::Quit => self.exit = true,
-            _ => {}
-        }
-    }
-
-    fn handle_team_selection_key(&mut self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Up | KeyCode::Char('k') => self.team_selection.move_up(),
-            KeyCode::Down | KeyCode::Char('j') => self.team_selection.move_down(),
-            KeyCode::Char(' ') | KeyCode::Enter => self.team_selection.toggle_grab(),
-            KeyCode::Esc | KeyCode::Char('q') => {
-                if self.team_selection.is_grabbed() {
-                    self.team_selection.release();
-                } else {
-                    self.screen = Screen::MainMenu;
-                }
-            }
-            _ => {}
+    fn handle_key_event(&mut self, key_event: KeyEvent) {
+        let action = self.active_handler().handle_key_event(key_event);
+        match action {
+            ScreenAction::GoTo(screen) => self.screen = screen,
+            ScreenAction::Quit => self.exit = true,
+            ScreenAction::None => {}
         }
     }
 }
