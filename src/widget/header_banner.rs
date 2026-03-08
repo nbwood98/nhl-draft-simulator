@@ -38,7 +38,8 @@ impl Widget for HeaderBanner {
         let max_chars = art_lines.iter().map(|r| r.chars().count()).max().unwrap_or(1);
         let mut lines: Vec<Line> = vec![Line::raw("")];
         for row in &art_lines {
-            let spans: Vec<Span> = row
+            let row_len = row.chars().count();
+            let mut spans: Vec<Span> = row
                 .chars()
                 .enumerate()
                 .map(|(i, ch)| {
@@ -51,6 +52,10 @@ impl Widget for HeaderBanner {
                     )
                 })
                 .collect();
+            // Pad shorter lines to max_chars so all lines center at the same x position.
+            if row_len < max_chars {
+                spans.push(Span::raw(" ".repeat(max_chars - row_len)));
+            }
             lines.push(Line::from(spans).centered());
         }
         Paragraph::new(lines).render(area, buf);
