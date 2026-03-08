@@ -11,7 +11,6 @@ env:
   BINARY_NAME: nhl-draft-simulator
 
 jobs:
-  # ── Determine the next semantic version from conventional commits ──
   version:
     name: Determine version
     runs-on: ubuntu-latest
@@ -42,12 +41,10 @@ jobs:
           patch=$(echo "$latest_tag" | sed 's/^v//' | cut -d. -f3)
 
           # Parse conventional commits for bump level
+          # feat!: → major, feat: → minor, anything else → patch
           bump="patch"
           while IFS= read -r msg; do
-            if echo "$msg" | grep -qiE 'BREAKING[ -]CHANGE'; then
-              bump="major"
-              break
-            elif echo "$msg" | grep -qE '^feat(\(.+\))?!:'; then
+            if echo "$msg" | grep -qE '^feat(\(.+\))?!:'; then
               bump="major"
               break
             elif echo "$msg" | grep -qE '^feat(\(.+\))?:'; then
@@ -69,7 +66,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-  # ── Build release binaries for each platform ──────────────────────
+  # Build release binaries for each platform
   build:
     name: Build (${{ matrix.target }})
     needs: version
