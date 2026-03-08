@@ -22,12 +22,12 @@ pub struct App {
 
 impl App {
     pub fn new(nhl_data: NhlData) -> Self {
-        let team_count = nhl_data.len();
+        let draft_order = nhl_data.draft_order().to_vec();
         Self {
             active_screen: ScreenId::MainMenu,
             exit: false,
             main_menu: MainMenuState::default(),
-            team_selection: TeamSelectionState::new(team_count),
+            team_selection: TeamSelectionState::new(draft_order),
             simulate_lottery: SimulateLotteryState::default(),
             nhl_data,
         }

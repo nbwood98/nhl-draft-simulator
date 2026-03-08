@@ -18,9 +18,9 @@ pub struct TeamSelectionState {
 }
 
 impl TeamSelectionState {
-    pub fn new(team_count: usize) -> Self {
+    pub fn new(draft_order: Vec<usize>) -> Self {
         Self {
-            team_order: (0..team_count).collect(),
+            team_order: draft_order,
             scroll: ScrollState::default(),
             grabbed: false,
         }

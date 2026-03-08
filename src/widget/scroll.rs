@@ -26,8 +26,6 @@ impl ScrollState {
         }
     }
 
-    /// Updates the cached viewport height and re-clamps the offset.
-    /// Call this during rendering when the actual area size is known.
     pub fn update_viewport(&mut self, height: usize) {
         if self.viewport_height != height {
             self.viewport_height = height;

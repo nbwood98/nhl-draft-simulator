@@ -7,20 +7,6 @@ use ratatui::{
 
 use crate::data::NhlData;
 
-fn team_color(team_idx: usize) -> Color {
-    const PALETTE: &[Color] = &[
-        Color::Cyan,
-        Color::LightBlue,
-        Color::Magenta,
-        Color::LightYellow,
-        Color::Green,
-        Color::LightRed,
-        Color::LightMagenta,
-        Color::LightGreen,
-    ];
-    PALETTE[team_idx % PALETTE.len()]
-}
-
 const CARD_WIDTH: usize = 11;
 const CARD_HEIGHT: usize = 8;
 
@@ -52,16 +38,14 @@ impl<'a> Widget for Carousel<'a> {
 
         while x < (area.x as isize + area_w as isize) {
             let team_idx = self.teams[card_num % n];
-            let abbrev = self.nhl_data.team_abbrev(team_idx);
-            let name = self.nhl_data.team_name(team_idx);
-            let logo_art = self.nhl_data.team_logo_art(team_idx);
-            let color = team_color(team_idx);
+            let team = self.nhl_data.team(team_idx);
+            let color = team.color;
 
             let card_x_start = x.max(area.x as isize) as u16;
             let card_x_end =
                 (x + CARD_WIDTH as isize).min(area.x as isize + area_w as isize) as u16;
 
-            for (row_i, art_line) in logo_art.iter().enumerate() {
+            for (row_i, art_line) in team.art_lines.iter().enumerate() {
                 let y = card_top + row_i as u16;
                 if y >= area.y + area.height {
                     break;
@@ -69,11 +53,11 @@ impl<'a> Widget for Carousel<'a> {
                 render_card_row(buf, art_line, x, card_x_start, card_x_end, y, color);
             }
 
-            let abbrev_y = card_top + logo_art.len() as u16;
+            let abbrev_y = card_top + team.art_lines.len() as u16;
             if abbrev_y < area.y + area.height {
                 render_text_row(
                     buf,
-                    &format!("{abbrev:^9}"),
+                    &format!("{:^9}", team.abbrev),
                     x,
                     card_x_start,
                     card_x_end,
@@ -84,8 +68,8 @@ impl<'a> Widget for Carousel<'a> {
                 );
             }
 
-            let short_name: String = name.chars().take(9).collect();
-            let name_y = card_top + logo_art.len() as u16 + 1;
+            let short_name: String = team.name.chars().take(9).collect();
+            let name_y = card_top + team.art_lines.len() as u16 + 1;
             if name_y < area.y + area.height {
                 render_text_row(
                     buf,

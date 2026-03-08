@@ -6,20 +6,19 @@ mod widget;
 use std::io;
 
 fn main() -> io::Result<()> {
-    let nhl_data = match data::nhl_api::fetch_standings() {
-        Ok(teams) => {
-            eprintln!("✓ Fetched {} teams from NHL API", teams.len());
-            let logos = data::logos::fetch_logos(&teams);
-            eprintln!("✓ Fetched team logos");
-            data::NhlData { teams, logos }
+    let standings = match data::nhl_api::fetch_standings() {
+        Ok(s) => {
+            eprintln!("✓ Fetched standings from NHL API");
+            Some(s)
         }
         Err(e) => {
             eprintln!("⚠ Could not fetch NHL standings: {e}");
-            eprintln!("  Using fallback data.");
-            data::NhlData::default()
+            eprintln!("  Using alphabetical fallback.");
+            None
         }
     };
 
+    let nhl_data = data::NhlData::new(standings);
     let mut app = app::App::new(nhl_data);
     ratatui::run(|terminal| app.run(terminal))
 }

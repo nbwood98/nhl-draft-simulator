@@ -50,7 +50,7 @@ impl<'a> Widget for RankedTable<'a> {
             .take(visible_rows)
             .map(|(list_idx, &team_idx)| {
                 let rank = list_idx + 1;
-                let name = self.nhl_data.team_name(team_idx);
+                let name = self.nhl_data.team(team_idx).name;
 
                 let (rank_style, name_style, prefix) = match &self.cursor {
                     Some(c) if list_idx == c.position && c.grabbed => (
