@@ -1,0 +1,164 @@
+name: Release
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  BINARY_NAME: nhl-draft-simulator
+
+jobs:
+  version:
+    name: Determine version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      tag: ${{ steps.semver.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate next semantic version
+        id: semver
+        run: |
+          # Find latest vX.Y.Z tag, or default to v0.0.0
+          latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [ -z "$latest_tag" ]; then
+            latest_tag="v0.0.0"
+            range="HEAD"
+          else
+            range="${latest_tag}..HEAD"
+          fi
+
+          echo "Latest tag: $latest_tag"
+
+          major=$(echo "$latest_tag" | sed 's/^v//' | cut -d. -f1)
+          minor=$(echo "$latest_tag" | sed 's/^v//' | cut -d. -f2)
+          patch=$(echo "$latest_tag" | sed 's/^v//' | cut -d. -f3)
+
+          # Parse conventional commits for bump level
+          # feat!: → major, feat: → minor, anything else → patch
+          bump="patch"
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qE '^feat(\(.+\))?!:'; then
+              bump="major"
+              break
+            elif echo "$msg" | grep -qE '^feat(\(.+\))?:'; then
+              if [ "$bump" != "major" ]; then
+                bump="minor"
+              fi
+            fi
+          done < <(git log "$range" --format='%s' 2>/dev/null)
+
+          case "$bump" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          version="${major}.${minor}.${patch}"
+          tag="v${version}"
+          echo "Next version: $version ($bump bump)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  # Build release binaries for each platform
+  build:
+    name: Build (${{ matrix.target }})
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: nhl-draft-simulator-linux-amd64
+            binary_ext: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: nhl-draft-simulator-windows-amd64
+            binary_ext: ".exe"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: target/${{ matrix.target }}/release/${{ env.BINARY_NAME }}${{ matrix.binary_ext }}
+          if-no-files-found: error
+
+  # ── Create GitHub Release with artifacts ──────────────────────────
+  release:
+    name: Create release
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+
+          cp "artifacts/nhl-draft-simulator-linux-amd64/${BINARY_NAME}" \
+             "release/${BINARY_NAME}-linux-amd64"
+          chmod +x "release/${BINARY_NAME}-linux-amd64"
+
+          cp "artifacts/nhl-draft-simulator-windows-amd64/${BINARY_NAME}.exe" \
+             "release/${BINARY_NAME}-windows-amd64.exe"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [ -z "$latest_tag" ]; then
+            range="HEAD"
+          else
+            range="${latest_tag}..HEAD"
+          fi
+
+          {
+            echo "changelog<<CHANGELOG_EOF"
+            echo "## What's Changed"
+            echo ""
+            git log "$range" --format='- %s' 2>/dev/null || echo "- Initial release"
+            echo ""
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ needs.version.outputs.tag }}" -m "Release ${{ needs.version.outputs.tag }}"
+          git push origin "${{ needs.version.outputs.tag }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: ${{ needs.version.outputs.tag }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: release/*
