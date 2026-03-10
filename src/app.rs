@@ -4,6 +4,7 @@ use std::io;
 use std::time::Duration;
 
 use crate::data::NhlData;
+use crate::screen::bulk_simulation::BulkSimulationState;
 use crate::screen::main_menu::MainMenuState;
 use crate::screen::simulate_lottery::SimulateLotteryState;
 use crate::screen::team_selection::TeamSelectionState;
@@ -18,6 +19,7 @@ pub struct App {
     main_menu: MainMenuState,
     team_selection: TeamSelectionState,
     simulate_lottery: SimulateLotteryState,
+    bulk_simulation: BulkSimulationState,
 }
 
 impl App {
@@ -29,6 +31,7 @@ impl App {
             main_menu: MainMenuState::default(),
             team_selection: TeamSelectionState::new(draft_order),
             simulate_lottery: SimulateLotteryState::default(),
+            bulk_simulation: BulkSimulationState::default(),
             nhl_data,
         }
     }
@@ -54,8 +57,12 @@ impl App {
     }
 
     fn tick(&mut self) {
-        if self.active_screen == ScreenId::MainMenu {
-            self.main_menu.tick();
+        match self.active_screen {
+            ScreenId::MainMenu => self.main_menu.tick(),
+            ScreenId::BulkSimulation => {
+                self.bulk_simulation.tick(&self.team_selection.team_order);
+            }
+            _ => {}
         }
     }
 
@@ -66,9 +73,15 @@ impl App {
             ScreenId::SimulateLottery => self
                 .simulate_lottery
                 .handle_key_event(key, &self.team_selection.team_order),
+            ScreenId::BulkSimulation => self.bulk_simulation.handle_key_event(key),
         };
         match action {
-            ScreenAction::GoTo(id) => self.active_screen = id,
+            ScreenAction::GoTo(id) => {
+                if id == ScreenId::BulkSimulation {
+                    self.bulk_simulation.reset();
+                }
+                self.active_screen = id;
+            }
             ScreenAction::Quit => self.exit = true,
             ScreenAction::None => {}
         }
@@ -85,6 +98,10 @@ impl App {
             }
             ScreenId::SimulateLottery => {
                 self.simulate_lottery
+                    .draw(frame, &self.nhl_data, &self.team_selection.team_order);
+            }
+            ScreenId::BulkSimulation => {
+                self.bulk_simulation
                     .draw(frame, &self.nhl_data, &self.team_selection.team_order);
             }
         }

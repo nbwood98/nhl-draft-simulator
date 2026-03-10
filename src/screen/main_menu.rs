@@ -18,6 +18,7 @@ use crate::widget::header_banner::{HeaderBanner, BANNER_HEIGHT};
 enum MenuItem {
     TeamSelection,
     SimulateLottery,
+    BulkSimulation,
     Quit,
 }
 
@@ -25,6 +26,7 @@ impl MenuItem {
     const ALL: &[MenuItem] = &[
         MenuItem::TeamSelection,
         MenuItem::SimulateLottery,
+        MenuItem::BulkSimulation,
         MenuItem::Quit,
     ];
 
@@ -32,6 +34,7 @@ impl MenuItem {
         match self {
             MenuItem::TeamSelection => "Team Selection",
             MenuItem::SimulateLottery => "Simulate Draft Lottery",
+            MenuItem::BulkSimulation => "Bulk Simulation",
             MenuItem::Quit => "Quit",
         }
     }
@@ -61,6 +64,7 @@ impl MainMenuState {
             KeyCode::Enter => match MenuItem::ALL[self.selected] {
                 MenuItem::TeamSelection => ScreenAction::GoTo(ScreenId::TeamSelection),
                 MenuItem::SimulateLottery => ScreenAction::GoTo(ScreenId::SimulateLottery),
+                MenuItem::BulkSimulation => ScreenAction::GoTo(ScreenId::BulkSimulation),
                 MenuItem::Quit => ScreenAction::Quit,
             },
             KeyCode::Char('q') | KeyCode::Esc => ScreenAction::Quit,

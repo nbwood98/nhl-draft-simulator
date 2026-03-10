@@ -43,12 +43,20 @@ impl Simulator {
             .collect()
     }
 
+    const DEAD_COMBO: [u8; 4] = [11, 12, 13, 14];
+
     fn run_single_draw(eligible_teams: &[(usize, f32)]) -> usize {
         let combinations = Self::get_combinations();
         let assigned_combos = Self::assign_combinations_weighted(eligible_teams);
 
-        let mut drawn_balls = Self::draw_balls();
-        drawn_balls.sort_unstable();
+        // Redraw if the dead combination [11,12,13,14] is drawn
+        let drawn_balls = loop {
+            let mut balls = Self::draw_balls();
+            balls.sort_unstable();
+            if balls != Self::DEAD_COMBO {
+                break balls;
+            }
+        };
 
         // Find which combination index the drawn balls correspond to
         let combo_index = combinations.iter().position(|&c| c == drawn_balls)
@@ -166,6 +174,14 @@ impl Simulator {
 
             assigned.push((team_idx, team_combos));
         }
+
+        // Rounding can leave indexes unassigned — distribute remainders
+        while !available_indexes.is_empty() {
+            let team = rng.random_range(0..assigned.len());
+            let pos = rng.random_range(0..available_indexes.len());
+            assigned[team].1.push(available_indexes.swap_remove(pos));
+        }
+
         assigned
     }
 
