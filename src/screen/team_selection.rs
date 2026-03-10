@@ -88,6 +88,7 @@ impl TeamSelectionState {
                     position: self.scroll.cursor,
                     grabbed: self.grabbed,
                 }),
+                initial_order: None,
             },
             table_area,
         );

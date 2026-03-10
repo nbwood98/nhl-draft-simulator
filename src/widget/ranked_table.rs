@@ -21,6 +21,7 @@ pub struct RankedTable<'a> {
     pub nhl_data: &'a NhlData,
     pub offset: usize,
     pub cursor: Option<CursorInfo>,
+    pub initial_order: Option<&'a [usize]>,
 }
 
 impl<'a> Widget for RankedTable<'a> {
@@ -41,6 +42,8 @@ impl<'a> Widget for RankedTable<'a> {
         block.render(area, buf);
 
         let visible_rows = inner.height.saturating_sub(1) as usize;
+
+        let show_diff = self.initial_order.is_some();
 
         let rows: Vec<Row> = self
             .teams
@@ -82,29 +85,74 @@ impl<'a> Widget for RankedTable<'a> {
                     ),
                 };
 
-                Row::new(vec![
+                let mut cells = vec![
                     Cell::from(format!("{prefix}{rank:>2}")).style(rank_style),
-                    Cell::from(name.to_string()).style(name_style),
-                ])
+                ];
+
+                if let Some(initial) = self.initial_order {
+                    let original_pos = initial.iter().position(|&t| t == team_idx).unwrap_or(list_idx);
+                    let diff = original_pos as isize - list_idx as isize;
+
+                    let diff_cell = if diff > 0 {
+                        Cell::from(format!(" ▲ {}", diff))
+                            .style(Style::default().fg(Color::Green).add_modifier(Modifier::BOLD))
+                    } else if diff < 0 {
+                        Cell::from(format!(" ▼ {}", diff.abs()))
+                            .style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD))
+                    } else {
+                        Cell::from("   -")
+                            .style(Style::default().fg(Color::DarkGray))
+                    };
+                    cells.push(diff_cell);
+                }
+
+                cells.push(Cell::from(name.to_string()).style(name_style));
+
+                Row::new(cells)
             })
             .collect();
 
-        let widths = [Constraint::Length(10), Constraint::Min(20)];
+        let (widths, header): (Vec<Constraint>, Vec<Cell>) = if show_diff {
+            (
+                vec![Constraint::Length(10), Constraint::Length(6), Constraint::Min(20)],
+                vec![
+                    Cell::from(format!("  {}", self.rank_header)).style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+                    ),
+                    Cell::from("+/-").style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+                    ),
+                    Cell::from("Team").style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+                    ),
+                ],
+            )
+        } else {
+            (
+                vec![Constraint::Length(10), Constraint::Min(20)],
+                vec![
+                    Cell::from(format!("  {}", self.rank_header)).style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+                    ),
+                    Cell::from("Team").style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+                    ),
+                ],
+            )
+        };
 
         let table = Table::new(rows, widths).header(
-            Row::new(vec![
-                Cell::from(format!("  {}", self.rank_header)).style(
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
-                ),
-                Cell::from("Team").style(
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
-                ),
-            ])
-            .height(1),
+            Row::new(header).height(1),
         );
 
         Widget::render(table, inner, buf);
