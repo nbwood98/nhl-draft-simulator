@@ -2,7 +2,7 @@ mod app;
 mod data;
 mod screen;
 mod widget;
-mod simulator;
+mod lottery;
 
 use std::io;
 

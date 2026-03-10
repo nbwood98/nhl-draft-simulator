@@ -19,7 +19,6 @@ impl Simulator {
         assert!((sum - 1.0).abs() < epsilon, "Probabilities must sum to 1.0, got {}", sum);
     }
 
-    /// Build the initial eligible teams list: (team_idx, probability) for teams in lottery contention.
     fn build_eligible_teams(initial_order: &[usize]) -> Vec<(usize, f32)> {
         initial_order.iter()
             .enumerate()
@@ -28,7 +27,6 @@ impl Simulator {
             .collect()
     }
 
-    /// Remove locked teams and redistribute their probabilities proportionally among remaining teams.
     fn redistribute_probabilities(
         eligible: &[(usize, f32)],
         locked_teams: &[usize],
@@ -45,8 +43,6 @@ impl Simulator {
             .collect()
     }
 
-    /// Run a single lottery draw with the given eligible teams and their probabilities.
-    /// Returns the winning team index.
     fn run_single_draw(eligible_teams: &[(usize, f32)]) -> usize {
         let combinations = Self::get_combinations();
         let assigned_combos = Self::assign_combinations_weighted(eligible_teams);
@@ -67,8 +63,6 @@ impl Simulator {
             .expect("No team was assigned combination number")
     }
 
-    /// Place a lottery winner into the draft order, respecting the max jump rule
-    /// and avoiding any already-locked positions. Returns the position they were placed at.
     fn place_winner(
         new_order: &mut Vec<usize>,
         initial_order: &[usize],
@@ -78,20 +72,15 @@ impl Simulator {
         let current_pos = initial_order.iter().position(|&t| t == winning_team)
             .expect("Winning team not found in draft order");
 
-        // Best possible position based on max jump
         let mut target_pos = current_pos.saturating_sub(Self::MAX_JUMP);
-
-        // If the target position is locked, slide down until we find an open slot
         while locked_positions.contains(&target_pos) {
             target_pos += 1;
         }
 
-        // Remove from current position in new_order and insert at target
         let current_in_new = new_order.iter().position(|&t| t == winning_team)
             .expect("Winning team not found in new order");
         new_order.remove(current_in_new);
         new_order.insert(target_pos, winning_team);
-
         target_pos
     }
 
@@ -103,7 +92,6 @@ impl Simulator {
         let mut locked_positions: Vec<usize> = Vec::new();
         let mut locked_teams: Vec<usize> = Vec::new();
 
-        // === Round 1: Draw for 1st overall pick ===
         let round1_winner = Self::run_single_draw(&eligible_teams);
         let round1_winner_original_pos = initial_order.iter()
             .position(|&t| t == round1_winner)
@@ -113,12 +101,9 @@ impl Simulator {
             &mut new_order, &initial_order, round1_winner, &locked_positions,
         );
 
-        // Lock the round 1 winner
         locked_positions.push(round1_placed_pos);
         locked_teams.push(round1_winner);
 
-        // If a team ranked 12-16 (0-indexed: 11-15) won, they can't reach 1st overall.
-        // The 1st seed keeps pick 1 and is also locked.
         if round1_winner_original_pos >= 11 {
             let first_seed = initial_order[0];
             if !locked_teams.contains(&first_seed) {
@@ -127,14 +112,12 @@ impl Simulator {
             }
         }
 
-        // === Round 2: Draw for 2nd overall pick ===
         let round2_eligible = Self::redistribute_probabilities(&eligible_teams, &locked_teams);
         let round2_winner = Self::run_single_draw(&round2_eligible);
 
         Self::place_winner(
             &mut new_order, &initial_order, round2_winner, &locked_positions,
         );
-
         new_order
     }
 
@@ -166,7 +149,6 @@ impl Simulator {
         combinations
     }
 
-    /// Assign combination indexes to teams based on explicit (team_idx, probability) pairs.
     fn assign_combinations_weighted(teams_with_probs: &[(usize, f32)]) -> Vec<(usize, Vec<usize>)> {
         let mut rng = rand::rng();
         let mut available_indexes = Self::combination_indexes();

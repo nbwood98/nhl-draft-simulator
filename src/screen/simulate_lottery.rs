@@ -9,7 +9,7 @@ use ratatui::{
 
 use crate::data::NhlData;
 use crate::screen::{ScreenAction, ScreenId};
-use crate::simulator::simulator::Simulator;
+use crate::lottery::simulator::Simulator;
 use crate::widget::footer::Footer;
 use crate::widget::ranked_table::RankedTable;
 

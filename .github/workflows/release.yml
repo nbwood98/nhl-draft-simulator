@@ -8,7 +8,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  BINARY_NAME: nhl-draft-simulator
+  BINARY_NAME: nhl-draft-lottery
 
 jobs:
   version:
@@ -75,11 +75,11 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: nhl-draft-simulator-linux-amd64
+            artifact_name: nhl-draft-lottery-linux-amd64
             binary_ext: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: nhl-draft-simulator-windows-amd64
+            artifact_name: nhl-draft-lottery-windows-amd64
             binary_ext: ".exe"
     runs-on: ${{ matrix.os }}
     steps:
