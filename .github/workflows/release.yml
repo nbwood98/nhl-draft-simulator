@@ -77,6 +77,10 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact_name: nhl-draft-simulator-linux-amd64
             binary_ext: ""
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: nhl-draft-simulator-macos-arm64
+            binary_ext: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: nhl-draft-simulator-windows-amd64
@@ -125,6 +129,10 @@ jobs:
           cp "artifacts/nhl-draft-simulator-linux-amd64/${BINARY_NAME}" \
              "release/${BINARY_NAME}-linux-amd64"
           chmod +x "release/${BINARY_NAME}-linux-amd64"
+
+          cp "artifacts/nhl-draft-simulator-macos-arm64/${BINARY_NAME}" \
+             "release/${BINARY_NAME}-macos-arm64"
+          chmod +x "release/${BINARY_NAME}-macos-arm64"
 
           cp "artifacts/nhl-draft-simulator-windows-amd64/${BINARY_NAME}.exe" \
              "release/${BINARY_NAME}-windows-amd64.exe"
