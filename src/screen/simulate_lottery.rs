@@ -9,6 +9,7 @@ use ratatui::{
 
 use crate::data::NhlData;
 use crate::screen::{ScreenAction, ScreenId};
+use crate::simulator::simulator::Simulator;
 use crate::widget::footer::Footer;
 use crate::widget::ranked_table::RankedTable;
 
@@ -39,8 +40,7 @@ impl SimulateLotteryState {
     }
 
     fn simulate(&mut self, team_order: &[usize]) {
-        // TODO: Implement actual simulation logic
-        self.result_teams = team_order.to_vec();
+        self.result_teams = Simulator::quick_simulate(team_order.to_vec());
         self.simulated = true;
     }
 
@@ -68,11 +68,12 @@ impl SimulateLotteryState {
                 nhl_data,
                 offset: 0,
                 cursor: None,
+                initial_order: None,
             },
             columns[0],
         );
 
-        self.draw_result_panel(frame, columns[1], nhl_data);
+        self.draw_result_panel(frame, columns[1], nhl_data, team_order);
 
         frame.render_widget(
             Footer {
@@ -86,7 +87,7 @@ impl SimulateLotteryState {
         );
     }
 
-    fn draw_result_panel(&self, frame: &mut Frame, area: Rect, nhl_data: &NhlData) {
+    fn draw_result_panel(&self, frame: &mut Frame, area: Rect, nhl_data: &NhlData, team_order: &[usize]) {
         if self.simulated {
             frame.render_widget(
                 RankedTable {
@@ -96,6 +97,7 @@ impl SimulateLotteryState {
                     nhl_data,
                     offset: 0,
                     cursor: None,
+                    initial_order: Some(team_order),
                 },
                 area,
             );
